@@ -1,0 +1,17 @@
+#cloud-config
+# Lambda Cloud Persistent Dev Environment — Cloud-Init
+# Used when launching instances via the Lambda API.
+#
+# bootcmd: runs on every boot, early in the boot process
+# runcmd: runs once per instance, after filesystems are mounted
+#
+# Since Lambda attaches the persistent FS at launch time,
+# runcmd reliably finds the filesystem mounted.
+
+bootcmd:
+  # Ensure libfuse2 is available for Neovim AppImage
+  - apt-get update -qq && apt-get install -y -qq libfuse2 > /dev/null 2>&1 || true
+
+runcmd:
+  # Run the bootstrap script from persistent filesystem
+  - bash /lambda/nfs/dev-env/setup/bootstrap.sh
