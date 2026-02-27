@@ -64,17 +64,45 @@ fi
 echo "  Linked: .bashrc_persistent → ~/.bashrc"
 
 # --- Persistent ~/.local/bin (Claude Code, user-local binaries) ---
+# ln -sfn won't replace a real directory; when ~/.local/bin already exists
+# (e.g. system-installed jupyter/pipx), symlink individual files from NFS
+# to preserve existing entries.
 if [[ -d "${FS_MOUNT}/home/.local/bin" ]]; then
     mkdir -p "${UBUNTU_HOME}/.local"
-    ln -sfn "${FS_MOUNT}/home/.local/bin" "${UBUNTU_HOME}/.local/bin"
+    if [[ -L "${UBUNTU_HOME}/.local/bin" ]]; then
+        ln -sfn "${FS_MOUNT}/home/.local/bin" "${UBUNTU_HOME}/.local/bin"
+    else
+        mkdir -p "${UBUNTU_HOME}/.local/bin"
+        for f in "${FS_MOUNT}/home/.local/bin/"*; do
+            [[ -e "$f" ]] || continue
+            ln -sf "$f" "${UBUNTU_HOME}/.local/bin/$(basename "$f")"
+        done
+    fi
     echo "  Linked: .local/bin"
 fi
 
 # --- Persistent ~/.local/share (Claude Code native installer data/versions) ---
 if [[ -d "${FS_MOUNT}/home/.local/share" ]]; then
     mkdir -p "${UBUNTU_HOME}/.local"
-    ln -sfn "${FS_MOUNT}/home/.local/share" "${UBUNTU_HOME}/.local/share"
+    if [[ -L "${UBUNTU_HOME}/.local/share" ]]; then
+        ln -sfn "${FS_MOUNT}/home/.local/share" "${UBUNTU_HOME}/.local/share"
+    else
+        mkdir -p "${UBUNTU_HOME}/.local/share"
+        for f in "${FS_MOUNT}/home/.local/share/"*; do
+            [[ -e "$f" ]] || continue
+            ln -sfn "$f" "${UBUNTU_HOME}/.local/share/$(basename "$f")"
+        done
+    fi
     echo "  Linked: .local/share"
+fi
+
+# --- Codex config (~/.codex) ---
+if [[ -d "${FS_MOUNT}/home/.codex" ]]; then
+    if [[ -d "${UBUNTU_HOME}/.codex" && ! -L "${UBUNTU_HOME}/.codex" ]]; then
+        rm -rf "${UBUNTU_HOME}/.codex"
+    fi
+    ln -sfn "${FS_MOUNT}/home/.codex" "${UBUNTU_HOME}/.codex"
+    echo "  Linked: .codex"
 fi
 
 # --- Symlink XDG config directories ---
@@ -90,6 +118,12 @@ fi
 if [[ -d "${FS_MOUNT}/home/.claude" ]]; then
     ln -sfn "${FS_MOUNT}/home/.claude" "${UBUNTU_HOME}/.claude"
     echo "  Linked: .claude"
+fi
+
+# Claude Code config file (~/.claude.json)
+if [[ -f "${FS_MOUNT}/home/.claude.json" ]]; then
+    ln -sf "${FS_MOUNT}/home/.claude.json" "${UBUNTU_HOME}/.claude.json"
+    echo "  Linked: .claude.json"
 fi
 
 # Neovim config (~/.config/nvim)
@@ -123,6 +157,8 @@ if [[ "$(id -u)" -eq 0 ]]; then
     chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.config/claude-code" 2>/dev/null || true
     chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.config/nvim" 2>/dev/null || true
     chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.claude" 2>/dev/null || true
+    chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.claude.json" 2>/dev/null || true
+    chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.codex" 2>/dev/null || true
     chown -R ubuntu:ubuntu "${UBUNTU_HOME}/.local" 2>/dev/null || true
     chown -R ubuntu:ubuntu "${UBUNTU_HOME}/.cache/huggingface" 2>/dev/null || true
     chown ubuntu:ubuntu "${UBUNTU_HOME}/.bashrc" 2>/dev/null || true
