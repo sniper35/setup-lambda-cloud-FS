@@ -42,6 +42,7 @@ mkdir -p "${FS_MOUNT}/home/.ssh"
 mkdir -p "${FS_MOUNT}/home/.config/nvim"
 mkdir -p "${FS_MOUNT}/home/.config/claude-code"
 mkdir -p "${FS_MOUNT}/home/.claude"
+mkdir -p "${FS_MOUNT}/home/.codex"
 mkdir -p "${FS_MOUNT}/home/.local/share"
 mkdir -p "${FS_MOUNT}/home/.local/bin"
 mkdir -p "${FS_MOUNT}/tools/bin"
@@ -116,8 +117,15 @@ echo "[6/8] Installing Claude Code and Codex..."
 
 # Symlink ~/.local/bin and ~/.local/share to persistent FS so everything persists.
 # The native installer writes to ~/.local/bin/claude + ~/.local/share/claude/versions/
+# Remove real directories first — ln -sfn won't replace them.
 mkdir -p "${HOME}/.local"
+if [[ -d "${HOME}/.local/bin" && ! -L "${HOME}/.local/bin" ]]; then
+    rm -rf "${HOME}/.local/bin"
+fi
 ln -sfn "${FS_MOUNT}/home/.local/bin" "${HOME}/.local/bin"
+if [[ -d "${HOME}/.local/share" && ! -L "${HOME}/.local/share" ]]; then
+    rm -rf "${HOME}/.local/share"
+fi
 ln -sfn "${FS_MOUNT}/home/.local/share" "${HOME}/.local/share"
 
 if [[ -f "${FS_MOUNT}/home/.local/bin/claude" ]]; then
@@ -132,10 +140,10 @@ else
         echo "  Native install failed (exit $?). Falling back to npm..."
         export npm_config_prefix="${FS_MOUNT}/tools/node_globals"
         npm install -g @anthropic-ai/claude-code
-        # Copy the npm wrapper to .local/bin so PATH is consistent
+        # Symlink npm wrapper to .local/bin so PATH is consistent
+        # (symlink instead of copy so npm update -g keeps it current)
         if [[ -f "${FS_MOUNT}/tools/node_globals/bin/claude" ]]; then
-            cp "${FS_MOUNT}/tools/node_globals/bin/claude" "${FS_MOUNT}/home/.local/bin/claude"
-            chmod +x "${FS_MOUNT}/home/.local/bin/claude"
+            ln -sf "${FS_MOUNT}/tools/node_globals/bin/claude" "${FS_MOUNT}/home/.local/bin/claude"
         fi
         echo "  Claude Code installed (npm fallback)."
     fi
@@ -206,7 +214,9 @@ cat > "${FS_MOUNT}/home/.bashrc_persistent" << 'BASHEOF'
 export LAMBDA_FS="/lambda/nfs/dev-env"
 
 # --- Persistent tools PATH ---
-export PATH="${LAMBDA_FS}/home/.local/bin:${PATH}"
+# Use ~/.local/bin (bootstrap symlinks NFS files into it) so that
+# 'claude update' and other installers can update in-place.
+export PATH="${HOME}/.local/bin:${PATH}"
 export PATH="${LAMBDA_FS}/tools/bin:${PATH}"
 export PATH="${LAMBDA_FS}/tools/node_globals/bin:${PATH}"
 
