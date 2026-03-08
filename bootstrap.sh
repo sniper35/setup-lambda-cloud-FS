@@ -90,7 +90,10 @@ if [[ -d "${FS_MOUNT}/home/.local/share" ]]; then
         mkdir -p "${UBUNTU_HOME}/.local/share"
         for f in "${FS_MOUNT}/home/.local/share/"*; do
             [[ -e "$f" ]] || continue
-            ln -sfn "$f" "${UBUNTU_HOME}/.local/share/$(basename "$f")"
+            dest="${UBUNTU_HOME}/.local/share/$(basename "$f")"
+            # Avoid nested links when destination already exists as a real directory.
+            [[ -L "${dest}" ]] || rm -rf "${dest}" 2>/dev/null || true
+            ln -sfn "$f" "${dest}"
         done
     fi
     echo "  Linked: .local/share"
