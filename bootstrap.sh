@@ -132,6 +132,12 @@ if [[ -d "${FS_MOUNT}/home/.config/nvim" ]]; then
     echo "  Linked: .config/nvim"
 fi
 
+# --- tmux config ---
+if [[ -f "${FS_MOUNT}/home/.tmux.conf" ]]; then
+    ln -sf "${FS_MOUNT}/home/.tmux.conf" "${UBUNTU_HOME}/.tmux.conf"
+    echo "  Linked: .tmux.conf"
+fi
+
 # --- HuggingFace token ---
 if [[ -f "${FS_MOUNT}/home/.huggingface_token" ]]; then
     mkdir -p "${UBUNTU_HOME}/.cache/huggingface"
@@ -160,6 +166,7 @@ if [[ "$(id -u)" -eq 0 ]]; then
     chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.claude.json" 2>/dev/null || true
     chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.codex" 2>/dev/null || true
     chown -R ubuntu:ubuntu "${UBUNTU_HOME}/.local" 2>/dev/null || true
+    chown -h ubuntu:ubuntu "${UBUNTU_HOME}/.tmux.conf" 2>/dev/null || true
     chown -R ubuntu:ubuntu "${UBUNTU_HOME}/.cache/huggingface" 2>/dev/null || true
     chown ubuntu:ubuntu "${UBUNTU_HOME}/.bashrc" 2>/dev/null || true
     echo "  Fixed: file ownership for ubuntu user"
