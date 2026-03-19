@@ -79,7 +79,6 @@ RSYNC_OPTS=(
     --exclude='*.swp'
     --exclude='*.swo'
     --exclude='__pycache__'
-    --exclude='.cache'
     --exclude='node_modules'
 )
 

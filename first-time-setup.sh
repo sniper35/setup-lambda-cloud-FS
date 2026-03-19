@@ -6,7 +6,7 @@ set -euo pipefail
 # Run this ONCE on your first instance with the persistent FS attached.
 #
 # Usage:
-#   1. Copy this entire 'setup/' directory to /lambda/nfs/dev-env/setup/
+#   1. Copy these setup scripts to /lambda/nfs/dev-env/setup/
 #   2. Edit config.env with your settings
 #   3. Run: bash /lambda/nfs/dev-env/setup/first-time-setup.sh
 #=============================================================================
@@ -19,7 +19,7 @@ if [[ -f "${SCRIPT_DIR}/config.env" ]]; then
     source "${SCRIPT_DIR}/config.env"
 else
     echo "ERROR: config.env not found at ${SCRIPT_DIR}/config.env"
-    echo "Create it from config.env and fill in your values."
+    echo "Create it from config.env.example and fill in your values."
     exit 1
 fi
 
@@ -219,6 +219,7 @@ export LAMBDA_FS="/lambda/nfs/dev-env"
 export PATH="${HOME}/.local/bin:${PATH}"
 export PATH="${LAMBDA_FS}/tools/bin:${PATH}"
 export PATH="${LAMBDA_FS}/tools/node_globals/bin:${PATH}"
+export npm_config_prefix="${LAMBDA_FS}/tools/node_globals"
 
 # --- bash-completion (persisted from NFS) ---
 if [[ $PS1 && ! ${BASH_COMPLETION_VERSINFO:-} && -f "${LAMBDA_FS}/tools/bash-completion/bash_completion" ]]; then
@@ -292,13 +293,22 @@ fi
 echo ""
 echo "[Post-setup] Cloning git repos..."
 
-if [[ -d "${FS_MOUNT}/repos/vllm" ]]; then
+if [[ -d "${FS_MOUNT}/repos/vllm/.git" ]]; then
     echo "  vllm already cloned, skipping."
+elif [[ -e "${FS_MOUNT}/repos/vllm" ]]; then
+    echo "  WARNING: ${FS_MOUNT}/repos/vllm exists but is not a valid git clone."
+    echo "  Fix manually, then run:"
+    echo "    git clone git@github.com:sniper35/vllm.git ${FS_MOUNT}/repos/vllm"
 else
-    git clone git@github.com:sniper35/vllm.git "${FS_MOUNT}/repos/vllm"
-    cd "${FS_MOUNT}/repos/vllm"
-    git remote add upstream git@github.com:vllm-project/vllm.git
-    echo "  Cloned: vllm (upstream: vllm-project/vllm)"
+    if git clone git@github.com:sniper35/vllm.git "${FS_MOUNT}/repos/vllm"; then
+        git -C "${FS_MOUNT}/repos/vllm" remote add upstream git@github.com:vllm-project/vllm.git 2>/dev/null || true
+        echo "  Cloned: vllm (upstream: vllm-project/vllm)"
+    else
+        rm -rf "${FS_MOUNT}/repos/vllm" 2>/dev/null || true
+        echo "  WARNING: Could not clone vllm via SSH (likely SSH keys are not set yet)."
+        echo "  You can clone it later with:"
+        echo "    git clone git@github.com:sniper35/vllm.git ${FS_MOUNT}/repos/vllm"
+    fi
 fi
 
 echo ""

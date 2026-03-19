@@ -66,8 +66,8 @@ Run these steps **once** on your very first Lambda instance with the `dev-env` f
 ### 1. Copy scripts to the persistent filesystem
 
 ```bash
-# From your local machine
-scp -r setup/ ubuntu@<INSTANCE_IP>:/lambda/nfs/dev-env/setup/
+# From this repo root on your local machine
+scp -r ./* ubuntu@<INSTANCE_IP>:/lambda/nfs/dev-env/setup/
 ```
 
 ### 2. Edit configuration
@@ -85,7 +85,7 @@ Update `LAMBDA_REGION`, `GIT_USER_NAME`, and `GIT_USER_EMAIL` to your values.
 bash /lambda/nfs/dev-env/setup/first-time-setup.sh
 ```
 
-This installs all tools, creates the directory structure, configures git, and writes `.bashrc_persistent`. It also clones git repos defined in the script.
+This installs all tools, creates the directory structure, configures git, and writes `.bashrc_persistent`. It also attempts to clone git repos defined in the script (and prints follow-up commands if SSH keys are not set yet).
 
 > **Note:** If the Claude Code native installer fails (e.g., on ARM CPUs or NFS noexec mounts), it automatically falls back to npm install.
 
@@ -147,7 +147,7 @@ Cloud-init runs `bootstrap.sh` automatically.
 
 ```bash
 export LAMBDA_API_KEY="your-api-key"
-bash /path/to/setup/launch-instance.sh gpu_1x_h100
+bash /path/to/this-repo/launch-instance.sh gpu_1x_h100
 ```
 
 After SSH-ing in, the environment is ready. Run `source ~/.bashrc` if needed.
@@ -217,7 +217,7 @@ bash /lambda/nfs/dev-env/setup/migrate-region.sh direct ubuntu@<TARGET_IP> --dry
 ### Relay mode (run on local machine, when instances can't reach each other)
 
 ```bash
-bash setup/migrate-region.sh relay ubuntu@<SOURCE_IP> ubuntu@<TARGET_IP>
+bash /path/to/this-repo/migrate-region.sh relay ubuntu@<SOURCE_IP> ubuntu@<TARGET_IP>
 ```
 
 ### After migration

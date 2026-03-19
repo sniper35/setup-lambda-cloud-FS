@@ -75,7 +75,13 @@ if [[ -d "${FS_MOUNT}/home/.local/bin" ]]; then
         mkdir -p "${UBUNTU_HOME}/.local/bin"
         for f in "${FS_MOUNT}/home/.local/bin/"*; do
             [[ -e "$f" ]] || continue
-            ln -sf "$f" "${UBUNTU_HOME}/.local/bin/$(basename "$f")"
+            base="$(basename "$f")"
+            # Skip claude binaries — the wrapper in tools/bin handles version
+            # resolution, and claude update manages ~/.local/bin/claude directly.
+            # Symlinking here would override the updated version with a stale
+            # NFS reference.
+            [[ "$base" == claude || "$base" == claude-dev ]] && continue
+            ln -sf "$f" "${UBUNTU_HOME}/.local/bin/${base}"
         done
     fi
     echo "  Linked: .local/bin"
