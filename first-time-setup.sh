@@ -301,6 +301,51 @@ else
     echo "  Cloned: vllm (upstream: vllm-project/vllm)"
 fi
 
+if [[ -d "${FS_MOUNT}/repos/autoresearch" ]]; then
+    echo "  autoresearch already cloned, skipping."
+else
+    git clone git@github.com:sniper35/autoresearch.git "${FS_MOUNT}/repos/autoresearch"
+    cd "${FS_MOUNT}/repos/autoresearch"
+    git remote add upstream git@github.com:karpathy/autoresearch.git
+    echo "  Cloned: autoresearch (upstream: karpathy/autoresearch)"
+fi
+
+if [[ -d "${FS_MOUNT}/repos/sglang" ]]; then
+    echo "  sglang already cloned, skipping."
+else
+    git clone git@github.com:sniper35/sglang.git "${FS_MOUNT}/repos/sglang"
+    cd "${FS_MOUNT}/repos/sglang"
+    git remote add upstream git@github.com:sgl-project/sglang.git
+    echo "  Cloned: sglang (upstream: sgl-project/sglang)"
+fi
+
+if [[ -d "${FS_MOUNT}/repos/miles" ]]; then
+    echo "  miles already cloned, skipping."
+else
+    git clone git@github.com:sniper35/miles.git "${FS_MOUNT}/repos/miles"
+    cd "${FS_MOUNT}/repos/miles"
+    git remote add upstream git@github.com:radixark/miles.git
+    echo "  Cloned: miles (upstream: radixark/miles)"
+fi
+
+if [[ -d "${FS_MOUNT}/repos/vllm-omni" ]]; then
+    echo "  vllm-omni already cloned, skipping."
+else
+    git clone git@github.com:sniper35/vllm-omni.git "${FS_MOUNT}/repos/vllm-omni"
+    cd "${FS_MOUNT}/repos/vllm-omni"
+    git remote add upstream git@github.com:vllm-project/vllm-omni.git
+    echo "  Cloned: vllm-omni (upstream: vllm-project/vllm-omni)"
+fi
+
+if [[ -d "${FS_MOUNT}/repos/parameter-golf" ]]; then
+    echo "  parameter-golf already cloned, skipping."
+else
+    git clone git@github.com:sniper35/parameter-golf.git "${FS_MOUNT}/repos/parameter-golf"
+    cd "${FS_MOUNT}/repos/parameter-golf"
+    git remote add upstream org-14957082@github.com:openai/parameter-golf.git
+    echo "  Cloned: parameter-golf (upstream: openai/parameter-golf)"
+fi
+
 echo ""
 echo "============================================================"
 echo " First-Time Setup Complete!"
