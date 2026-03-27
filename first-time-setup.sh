@@ -37,7 +37,7 @@ if [[ ! -d "${FS_MOUNT}" ]]; then
 fi
 
 # --- Create directory structure ---
-echo "[1/8] Creating directory structure..."
+echo "[1/9] Creating directory structure..."
 mkdir -p "${FS_MOUNT}/home/.ssh"
 mkdir -p "${FS_MOUNT}/home/.config/nvim"
 mkdir -p "${FS_MOUNT}/home/.config/claude-code"
@@ -55,7 +55,7 @@ mkdir -p "${FS_MOUNT}/.cache/uv"
 echo "  Done."
 
 # --- Copy bash-completion to persistent FS ---
-echo "[2/8] Installing bash-completion..."
+echo "[2/9] Installing bash-completion..."
 if [[ -d "${FS_MOUNT}/tools/bash-completion/completions" ]]; then
     echo "  bash-completion already installed."
 else
@@ -67,7 +67,7 @@ else
 fi
 
 # --- Install Neovim (AppImage, standalone) ---
-echo "[3/8] Installing Neovim AppImage..."
+echo "[3/9] Installing Neovim AppImage..."
 NVIM_URL="https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"
 if [[ -f "${FS_MOUNT}/tools/bin/nvim" ]]; then
     echo "  Neovim already installed, skipping. (Delete to reinstall)"
@@ -78,7 +78,7 @@ else
 fi
 
 # --- Install uv (standalone binary) ---
-echo "[4/8] Installing uv..."
+echo "[4/9] Installing uv..."
 if [[ -f "${FS_MOUNT}/tools/bin/uv" ]]; then
     echo "  uv already installed, skipping. (Delete to reinstall)"
 else
@@ -92,8 +92,17 @@ else
     echo "  uv installed: ${FS_MOUNT}/tools/bin/uv"
 fi
 
+# --- Install HuggingFace CLI via uv tool ---
+echo "[5/9] Installing HuggingFace CLI..."
+if [[ -f "${FS_MOUNT}/home/.local/bin/hf" ]]; then
+    echo "  hf CLI already installed, skipping. (Delete to reinstall)"
+else
+    "${FS_MOUNT}/tools/bin/uv" tool install huggingface_hub
+    echo "  hf CLI installed: ${FS_MOUNT}/home/.local/bin/hf"
+fi
+
 # --- Install Node.js via nvm (persistent) ---
-echo "[5/8] Installing nvm + Node.js ${NODE_VERSION}..."
+echo "[6/9] Installing nvm + Node.js ${NODE_VERSION}..."
 export NVM_DIR="${FS_MOUNT}/tools/nvm"
 if [[ -s "${NVM_DIR}/nvm.sh" ]]; then
     echo "  nvm already installed."
@@ -113,7 +122,7 @@ else
 fi
 
 # --- Install Claude Code (native installer with npm fallback) and Codex ---
-echo "[6/8] Installing Claude Code and Codex..."
+echo "[7/9] Installing Claude Code and Codex..."
 
 # Symlink ~/.local/bin and ~/.local/share to persistent FS so everything persists.
 # The native installer writes to ~/.local/bin/claude + ~/.local/share/claude/versions/
@@ -160,7 +169,7 @@ fi
 echo "  Global npm packages: ${FS_MOUNT}/tools/node_globals"
 
 # --- Configure Git with SSH signing ---
-echo "[7/8] Configuring Git..."
+echo "[8/9] Configuring Git..."
 cat > "${FS_MOUNT}/home/.gitconfig" << GITEOF
 [user]
     name = ${GIT_USER_NAME}
@@ -204,7 +213,7 @@ chmod 600 "${FS_MOUNT}/home/.ssh/config"
 echo "  Created: ${FS_MOUNT}/home/.ssh/config"
 
 # --- Create persistent .bashrc additions ---
-echo "[8/8] Creating persistent bash profile..."
+echo "[9/9] Creating persistent bash profile..."
 cat > "${FS_MOUNT}/home/.bashrc_persistent" << 'BASHEOF'
 #=============================================================================
 # Lambda Cloud Persistent Dev Environment — Bash Profile
@@ -268,7 +277,7 @@ fi
 
 echo "=== Lambda Persistent Dev Env loaded ==="
 echo "Filesystem: ${LAMBDA_FS}"
-echo "Tools: nvim, uv, node, claude, codex"
+echo "Tools: nvim, uv, node, claude, codex, hf"
 echo "Repos: ${LAMBDA_FS}/repos"
 
 # --- Default working directory ---
