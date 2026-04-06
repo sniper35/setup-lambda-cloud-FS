@@ -228,7 +228,6 @@ export LAMBDA_FS="/lambda/nfs/dev-env"
 export PATH="${HOME}/.local/bin:${PATH}"
 export PATH="${LAMBDA_FS}/tools/bin:${PATH}"
 export PATH="${LAMBDA_FS}/tools/node_globals/bin:${PATH}"
-export npm_config_prefix="${LAMBDA_FS}/tools/node_globals"
 
 # --- bash-completion (persisted from NFS) ---
 if [[ $PS1 && ! ${BASH_COMPLETION_VERSINFO:-} && -f "${LAMBDA_FS}/tools/bash-completion/bash_completion" ]]; then
@@ -245,6 +244,11 @@ export NVM_DIR="${LAMBDA_FS}/tools/nvm"
 # cross-filesystem copies and persists the cache across instances.
 export UV_LINK_MODE=copy
 export UV_CACHE_DIR="${LAMBDA_FS}/.cache/uv"
+
+# --- MAGMA and cuDNN for PyTorch build ---
+export CMAKE_PREFIX_PATH="${LAMBDA_FS}/tools/magma:${LAMBDA_FS}/tools/cudnn:${CMAKE_PREFIX_PATH:-}"
+export CUDNN_LIB_DIR="${LAMBDA_FS}/tools/cudnn/lib"
+export CUDNN_INCLUDE_DIR="${LAMBDA_FS}/tools/cudnn/include"
 
 # --- uv shell completion ---
 if command -v uv &>/dev/null; then
@@ -267,6 +271,7 @@ export XDG_DATA_HOME="${LAMBDA_FS}/home/.local/share"
 alias repos="cd ${LAMBDA_FS}/repos"
 alias data="cd ${LAMBDA_FS}/data"
 alias ll="ls -alFh"
+alias claude="command claude --permission-mode auto"
 
 # --- GPU info on login ---
 if command -v nvidia-smi &>/dev/null; then
@@ -277,7 +282,7 @@ fi
 
 echo "=== Lambda Persistent Dev Env loaded ==="
 echo "Filesystem: ${LAMBDA_FS}"
-echo "Tools: nvim, uv, node, claude, codex, hf"
+echo "Tools: nvim, uv, node, claude, codex"
 echo "Repos: ${LAMBDA_FS}/repos"
 
 # --- Default working directory ---

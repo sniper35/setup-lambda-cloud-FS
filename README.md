@@ -10,6 +10,7 @@ Scripts to set up a persistent development environment on Lambda Cloud GPU insta
 - nvm + Node.js 22
 - Claude Code (native installer with npm fallback)
 - Codex
+- HuggingFace CLI (`hf`, via `uv tool install`)
 - bash-completion
 
 **Features:**
@@ -191,6 +192,39 @@ npm install -g <package-name>
 # Bash completion for a new tool
 <tool> completion bash > /lambda/nfs/dev-env/tools/bash-completion/completions/<tool>
 ```
+
+## MAGMA and cuDNN (optional, manual install)
+
+`.bashrc_persistent` exports a few build-time variables pointing into `tools/magma` and `tools/cudnn` so that source builds of PyTorch can pick them up automatically:
+
+```bash
+CMAKE_PREFIX_PATH="${LAMBDA_FS}/tools/magma:${LAMBDA_FS}/tools/cudnn:${CMAKE_PREFIX_PATH:-}"
+CUDNN_LIB_DIR="${LAMBDA_FS}/tools/cudnn/lib"
+CUDNN_INCLUDE_DIR="${LAMBDA_FS}/tools/cudnn/include"
+```
+
+These directories are **not** populated by `first-time-setup.sh` — the env vars are harmless if the directories are empty or missing, but any build that actually needs MAGMA/cuDNN will need you to install them by hand first. Both are CUDA-version-specific, so there's no single one-shot install that works everywhere.
+
+**cuDNN** — download the vendor tarball from NVIDIA for your CUDA version and extract it so that `lib/` and `include/` sit directly under `${LAMBDA_FS}/tools/cudnn/`:
+
+```bash
+mkdir -p /lambda/nfs/dev-env/tools/cudnn
+# Download e.g. cudnn-linux-x86_64-9.x.y.z_cuda12-archive.tar.xz from NVIDIA
+tar -xf cudnn-linux-*-archive.tar.xz --strip-components=1 \
+    -C /lambda/nfs/dev-env/tools/cudnn
+ls /lambda/nfs/dev-env/tools/cudnn  # should show include/ and lib/
+```
+
+**MAGMA** — clone and build from source (or drop in a prebuilt tree) at `${LAMBDA_FS}/tools/magma/`. A minimal flow:
+
+```bash
+git clone https://bitbucket.org/icl/magma.git /lambda/nfs/dev-env/tools/magma
+cd /lambda/nfs/dev-env/tools/magma
+# Configure make.inc for your CUDA arch, then:
+make -j generate && make -j lib sparse-lib
+```
+
+`CMAKE_PREFIX_PATH` just needs MAGMA's install (or build) tree to be CMake-discoverable — a PyTorch source build will find it from there.
 
 ## Cross-Region Migration
 
